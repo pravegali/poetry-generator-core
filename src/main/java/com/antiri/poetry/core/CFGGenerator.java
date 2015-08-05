@@ -15,6 +15,7 @@ public class CFGGenerator {
 
     private static String expression = "";
     private static java.util.List<Production> productionList = new ArrayList<Production>();
+    private static Random random = new Random();
 
     public static void main(String[] args) throws IOException {
 
@@ -55,20 +56,68 @@ public class CFGGenerator {
          *
          */
 
-        Map<String, List<String>> productions = new HashMap<String, List<String>>();
+        Map<String, List<List<String>>> productions = new HashMap<String, List<List<String>>>();
 
         File cfgFile = new File("poem.txt");
         Scanner fileScanner = new Scanner(cfgFile);
 
         while (fileScanner.hasNext()) {
             String production = fileScanner.nextLine();
-            List<String> expressions = new ArrayList<String>();
+            List<List<String>> expressions = new ArrayList<List<String>>();
+            List<String> components = new ArrayList<String>();
+
+            // Fin the non-terminal identifier
             String nonTerminal = production.split(": ")[0];
-            expressions.addAll(Arrays.asList(production.split(": ")[1].split("\\|")));
+
+            // Break up the line on spaces to get the components
+            // Break up the components into expressions
+            // Add the expressions into the components list
+            // Add the components list to the expressions list
+            components.addAll(Arrays.asList(production.split(": ")[1].split(" ")));
+            for (String component : components) {
+                List<String> expression2 = new ArrayList<String>();
+                expression2.addAll(Arrays.asList(component.split("\\|")));
+                expressions.add(expression2);
+            }
             productions.put(nonTerminal, expressions);
         }
 
-        System.out.println(productions);
+        // Find the POEM. For every token in there, find the right substitution. Check if it's a command or not.
+        // Start to build out a string. When we hit the $END command, or run out of substitutions to make, end
+        // the loop and return the string.
+
+        String poem = "";
+        process:
+        {
+            for (List<String> expressionList : productions.get("VERB")) {
+                String element = selectRandomElement(expressionList);
+
+                if (element.startsWith("$")) {
+                    // System.out.println("Command is: " + element);
+                    if (element.compareTo("$END") == 0) {
+                        break process;
+                    }
+                    if (element.compareTo("$LINEBREAK") == 0) {
+                        element = System.lineSeparator();
+                    }
+                } else if (element.startsWith("<")) {
+                    // System.out.println("Non-Terminal is: " + element);
+                } else {
+                    // System.out.println("Terminal is: " + element);
+                }
+                poem += element;
+            }
+        }
+
+        System.out.println(poem);
+    }
+
+    /**
+     * Randomly select a terminal, recursively
+     * @return
+     */
+    public static String selectRandomElement(List<String> expressions) {
+        return expressions.get(random.nextInt(expressions.size()));
     }
 
     /**
