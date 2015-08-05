@@ -16,6 +16,8 @@ public class CFGGenerator {
     private static String expression = "";
     private static java.util.List<Production> productionList = new ArrayList<Production>();
     private static Random random = new Random();
+    private static Map<String, List<List<String>>> productions = new HashMap<String, List<List<String>>>();
+    private static Map<String, List<List<String>>> poem = new HashMap<String, List<List<String>>>();
 
     public static void main(String[] args) throws IOException {
 
@@ -56,7 +58,7 @@ public class CFGGenerator {
          *
          */
 
-        Map<String, List<List<String>>> productions = new HashMap<String, List<List<String>>>();
+
 
         File cfgFile = new File("poem.txt");
         Scanner fileScanner = new Scanner(cfgFile);
@@ -93,7 +95,6 @@ public class CFGGenerator {
                 String element = selectRandomElement(expressionList);
 
                 if (element.startsWith("$")) {
-                    // System.out.println("Command is: " + element);
                     if (element.compareTo("$END") == 0) {
                         break process;
                     }
@@ -101,17 +102,44 @@ public class CFGGenerator {
                         element = System.lineSeparator();
                     }
                 } else if (element.startsWith("<")) {
-                    // System.out.println("Non-Terminal is: " + element);
-                } else {
-                    // System.out.println("Terminal is: " + element);
+                    String newElement = "";
+                    for (String nonTerminal : findTerminal(element)) {
+                        newElement += nonTerminal;
+                    }
+                    element = newElement;
+
                 }
-                poem += element;
+                poem += (" " + element);
             }
         }
 
         System.out.println(poem);
     }
 
+    /**
+     * Decide if a given element is or is not a terminal token
+     * @param expression
+     * @return
+     */
+    public static boolean isTerminal(String expression) {
+        return !(expression.startsWith("$") || expression.startsWith("<"));
+    }
+
+    /**
+     * Take in a token like "hello", "$LINEBREAK", "$END" or "<VERB>"
+     * If it's terminal, just return it.
+     * if it's non terminal, resolve it
+     * @param nonTerminal
+     * @return
+     */
+    public static List<String> findTerminal(String nonTerminal) {
+        List<String> tokens = new ArrayList<String>();
+        nonTerminal = nonTerminal.substring(nonTerminal.indexOf('<') + 1, nonTerminal.indexOf('>'));
+        for (List<String> component : productions.get(nonTerminal)) {
+            tokens.add(selectRandomElement(component));
+        }
+        return tokens;
+    }
     /**
      * Randomly select a terminal, recursively
      * @return
